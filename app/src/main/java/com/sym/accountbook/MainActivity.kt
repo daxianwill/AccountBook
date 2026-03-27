@@ -26,6 +26,7 @@ import com.sym.accountbook.data.DatabaseInitializer
 import com.sym.accountbook.ui.navigation.AppNavHost
 import com.sym.accountbook.ui.navigation.Screen
 import com.sym.accountbook.ui.theme.AppTheme
+import com.sym.accountbook.utils.ThemeManager
 
 sealed class BottomNavItem(
     val route: String,
@@ -48,8 +49,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         DatabaseInitializer.initialize(this)
+        ThemeManager.initialize(this)
         setContent {
-            AppTheme {
+            AppTheme(
+                darkTheme = ThemeManager.isDarkThemeEnabled,
+                dynamicColor = ThemeManager.isDynamicColorEnabled
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
