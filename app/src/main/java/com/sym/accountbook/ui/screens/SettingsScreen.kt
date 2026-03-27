@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -50,6 +51,7 @@ import com.sym.accountbook.ui.viewmodel.TransactionViewModel
 import com.sym.accountbook.ui.viewmodel.TransactionViewModelFactory
 import com.sym.accountbook.utils.CsvExporter
 import com.sym.accountbook.utils.CsvImporter
+import com.sym.accountbook.utils.ThemeManager
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +69,9 @@ fun SettingsScreen(navController: NavController) {
     var isImporting by remember { mutableStateOf(false) }
     var showImportResult by remember { mutableStateOf(false) }
     var importResult by remember { mutableStateOf<com.sym.accountbook.utils.ImportResult?>(null) }
+
+    var isDynamicColorEnabled by remember { mutableStateOf(ThemeManager.isDynamicColorEnabled) }
+    var isDarkThemeEnabled by remember { mutableStateOf(ThemeManager.isDarkThemeEnabled) }
 
     // 创建仓库实例
     val db = AppDatabase.getDatabase(context)
@@ -116,9 +121,85 @@ fun SettingsScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "数据管理",
+                text = "主题设置",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // 动态颜色开关
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "动态颜色",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "使用系统壁纸颜色（仅Android 12+）",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = isDynamicColorEnabled,
+                        onCheckedChange = {
+                            isDynamicColorEnabled = it
+                            ThemeManager.saveDynamicColorSetting(context, it)
+                        }
+                    )
+                }
+            }
+
+            // 深色主题开关
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "深色主题",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "切换深色/浅色主题",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = isDarkThemeEnabled,
+                        onCheckedChange = {
+                            isDarkThemeEnabled = it
+                            ThemeManager.saveDarkThemeSetting(context, it)
+                        }
+                    )
+                }
+            }
+
+            Text(
+                text = "数据管理",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
 
             // 导出交易记录

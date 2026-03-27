@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.sym.accountbook.utils.ThemeManager
 
 // 可爱粉色系 - 浅色主题
 private val CuteLightColorScheme = lightColorScheme(
@@ -81,7 +82,7 @@ private val CuteDarkColorScheme = darkColorScheme(
 @Composable
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,  // 禁用动态颜色，使用我们的粉色主题
+    dynamicColor: Boolean = ThemeManager.isDynamicColorEnabled,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -101,11 +102,11 @@ fun AppTheme(
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
-
+    
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = CuteTypography,  // 使用可爱字体风格
-        shapes = CuteShapes,         // 使用可爱圆角形状
+        typography = MaterialTheme.typography,
+        shapes = CuteShapes,
         content = content
     )
 }
