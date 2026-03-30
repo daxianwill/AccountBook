@@ -65,7 +65,9 @@ import com.sym.accountbook.ui.viewmodel.BudgetViewModel
 import com.sym.accountbook.ui.viewmodel.BudgetViewModelFactory
 import com.sym.accountbook.ui.viewmodel.TransactionViewModel
 import com.sym.accountbook.ui.viewmodel.TransactionViewModelFactory
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
+import kotlinx.coroutines.flow.collect
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -95,36 +97,28 @@ fun HomeScreen(navController: NavController) {
     var selectedMonth by remember { mutableStateOf(currentMonth) }
     var showMonthPicker by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        val calendar = Calendar.getInstance()
-        val endDate = calendar.time
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        val startDate = calendar.time
+    // 计算选中月份的开始和结束日期
+    val (startDate, endDate) = remember(selectedYear, selectedMonth) {
+        val start = Calendar.getInstance().apply {
+            set(selectedYear, selectedMonth, 1, 0, 0, 0)
+        }.time
+        val end = Calendar.getInstance().apply {
+            set(selectedYear, selectedMonth, getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59)
+        }.time
+        Pair(start, end)
     }
 
-    val transactionsWithCategory by transactionViewModel.allTransactionsWithCategory
-        .observeAsState(initial = emptyList())
+    // 使用Flow获取交易数据
+    val transactionsWithCategory by transactionViewModel.getTransactionsWithCategoryByDateRange(startDate, endDate)
+        .collectAsState(initial = emptyList())
 
-    // 根据选中的月份筛选交易记录
-    val filteredTransactions = remember(transactionsWithCategory, selectedYear, selectedMonth) {
-        transactionsWithCategory.filter { item ->
-            val itemCalendar = Calendar.getInstance()
-            itemCalendar.time = item.transaction.date
-            itemCalendar.get(Calendar.YEAR) == selectedYear &&
-                    itemCalendar.get(Calendar.MONTH) == selectedMonth
-        }
-    }
-
-    // Calculate summary based on filtered transactions
-    LaunchedEffect(filteredTransactions) {
-        totalExpense = filteredTransactions
+    // 计算收支汇总
+    LaunchedEffect(transactionsWithCategory) {
+        totalExpense = transactionsWithCategory
             .filter { it.transaction.type == TransactionType.EXPENSE }
             .sumOf { it.transaction.amount }
 
-        totalIncome = filteredTransactions
+        totalIncome = transactionsWithCategory
             .filter { it.transaction.type == TransactionType.INCOME }
             .sumOf { it.transaction.amount }
     }
@@ -195,7 +189,7 @@ fun HomeScreen(navController: NavController) {
                 }
             }
 
-            TransactionList(transactions = filteredTransactions, navController = navController)
+            TransactionList(transactions = transactionsWithCategory, navController = navController)
 
             // 月份选择对话框
             if (showMonthPicker) {
@@ -433,11 +427,11 @@ fun TransactionList(transactions: List<TransactionWithCategory>, navController: 
                     DateHeader(date = date)
                 }
                 // 当日交易记录
-                items(items) { item ->
+                items(items) {
                     TransactionItem(
-                        item = item,
+                        item = it,
                         onClick = {
-                            navController.navigate(Screen.EditTransaction.createRoute(item.transaction.id))
+                            navController.navigate(Screen.EditTransaction.createRoute(it.transaction.id))
                         }
                     )
                 }
@@ -451,8 +445,6 @@ fun DateHeader(date: java.util.Date) {
     val dateFormat = SimpleDateFormat("MM月dd日", Locale.CHINA)
     val dayFormat = SimpleDateFormat("EEEE", Locale.CHINA)
 
-    val now = Calendar.getInstance()
-    
     val today = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)

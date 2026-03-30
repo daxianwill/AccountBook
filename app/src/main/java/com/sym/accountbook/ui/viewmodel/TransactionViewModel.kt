@@ -18,32 +18,62 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
     private val repository: TransactionRepository
     val allTransactions: LiveData<List<Transaction>>
     val allTransactionsWithCategory: LiveData<List<TransactionWithCategory>>
+    
+    // Flow versions for better performance
+    val allTransactionsFlow: Flow<List<Transaction>>
+    val allTransactionsWithCategoryFlow: Flow<List<TransactionWithCategory>>
 
     init {
         val transactionDao = AppDatabase.getDatabase(application).transactionDao()
         repository = TransactionRepository(transactionDao)
-        allTransactions = repository.allTransactions.asLiveData()
-        allTransactionsWithCategory = repository.allTransactionsWithCategory.asLiveData()
+        allTransactionsFlow = repository.allTransactions
+        allTransactionsWithCategoryFlow = repository.allTransactionsWithCategory
+        allTransactions = allTransactionsFlow.asLiveData()
+        allTransactionsWithCategory = allTransactionsWithCategoryFlow.asLiveData()
     }
 
     fun getTransactionsByDateRange(startDate: Date, endDate: Date): LiveData<List<Transaction>> {
         return repository.getTransactionsByDateRange(startDate, endDate).asLiveData()
     }
+    
+    fun getTransactionsByDateRangeFlow(startDate: Date, endDate: Date): Flow<List<Transaction>> {
+        return repository.getTransactionsByDateRange(startDate, endDate)
+    }
+
+    fun getTransactionsWithCategoryByDateRange(startDate: Date, endDate: Date): Flow<List<TransactionWithCategory>> {
+        return repository.getTransactionsWithCategoryByDateRange(startDate, endDate)
+    }
 
     fun getTotalExpense(startDate: Date, endDate: Date): LiveData<Double> {
         return repository.getTotalExpense(startDate, endDate).asLiveData()
+    }
+    
+    fun getTotalExpenseFlow(startDate: Date, endDate: Date): Flow<Double> {
+        return repository.getTotalExpense(startDate, endDate)
     }
 
     fun getTotalIncome(startDate: Date, endDate: Date): LiveData<Double> {
         return repository.getTotalIncome(startDate, endDate).asLiveData()
     }
+    
+    fun getTotalIncomeFlow(startDate: Date, endDate: Date): Flow<Double> {
+        return repository.getTotalIncome(startDate, endDate)
+    }
 
     fun getCurrentMonthExpense(): LiveData<Double> {
         return repository.getCurrentMonthExpense().asLiveData()
     }
+    
+    fun getCurrentMonthExpenseFlow(): Flow<Double> {
+        return repository.getCurrentMonthExpense()
+    }
 
     fun getCurrentMonthIncome(): LiveData<Double> {
         return repository.getCurrentMonthIncome().asLiveData()
+    }
+    
+    fun getCurrentMonthIncomeFlow(): Flow<Double> {
+        return repository.getCurrentMonthIncome()
     }
 
     fun insertTransaction(transaction: Transaction) = viewModelScope.launch {

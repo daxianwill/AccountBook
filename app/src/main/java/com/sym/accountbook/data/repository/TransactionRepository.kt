@@ -15,6 +15,10 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
         return transactionDao.getTransactionsByDateRange(startDate, endDate)
     }
 
+    fun getTransactionsWithCategoryByDateRange(startDate: Date, endDate: Date): Flow<List<TransactionWithCategory>> {
+        return transactionDao.getTransactionsWithCategoryByDateRange(startDate, endDate)
+    }
+
     fun getTransactionById(transactionId: Long): Flow<Transaction?> {
         return transactionDao.getTransactionById(transactionId)
     }

@@ -23,6 +23,10 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC")
     fun getAllTransactionsWithCategory(): Flow<List<TransactionWithCategory>>
 
+    @RoomTransaction
+    @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getTransactionsWithCategoryByDateRange(startDate: Date, endDate: Date): Flow<List<TransactionWithCategory>>
+
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun getTransactionsByDateRange(startDate: Date, endDate: Date): Flow<List<Transaction>>
 

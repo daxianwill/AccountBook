@@ -15,7 +15,7 @@ import com.sym.accountbook.data.entity.Transaction
 @Database(
     entities = [Transaction::class, Category::class, Budget::class],
     version = 2,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -35,6 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "app_database"
                 )
                 .fallbackToDestructiveMigration()
+                .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
                 .build()
                 INSTANCE = instance
                 instance

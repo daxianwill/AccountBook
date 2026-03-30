@@ -7,13 +7,19 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.sym.accountbook.data.entity.Budget
 import com.sym.accountbook.data.repository.BudgetRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class BudgetViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: BudgetRepository = BudgetRepository(application)
 
+    // LiveData versions for compatibility
     val enabledBudgets: LiveData<List<Budget>> = repository.getEnabledBudgets().asLiveData()
     val totalBudget: LiveData<Budget?> = repository.getTotalBudget().asLiveData()
+    
+    // Flow versions for better performance
+    val enabledBudgetsFlow: Flow<List<Budget>> = repository.getEnabledBudgets()
+    val totalBudgetFlow: Flow<Budget?> = repository.getTotalBudget()
 
     fun insertBudget(budget: Budget) {
         viewModelScope.launch {

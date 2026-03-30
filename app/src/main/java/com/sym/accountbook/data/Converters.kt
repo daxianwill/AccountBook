@@ -1,27 +1,45 @@
 package com.sym.accountbook.data
 
 import androidx.room.TypeConverter
-import com.sym.accountbook.data.entity.TransactionType
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.util.Date
+import java.util.HashMap
 
 class Converters {
-    @TypeConverter
-    fun fromTimestamp(value: Long?): Date? {
-        return value?.let { Date(it) }
-    }
+    private val gson = Gson()
 
     @TypeConverter
-    fun dateToTimestamp(date: Date?): Long? {
+    fun fromDate(date: Date?): Long? {
         return date?.time
     }
 
     @TypeConverter
-    fun fromTransactionType(type: TransactionType): String {
-        return type.name
+    fun toDate(timestamp: Long?): Date? {
+        return timestamp?.let { Date(it) }
     }
 
     @TypeConverter
-    fun toTransactionType(name: String): TransactionType {
-        return TransactionType.valueOf(name)
+    fun fromLongDoubleMap(map: Map<Long, Double>?): String? {
+        return map?.let { gson.toJson(it) }
+    }
+
+    @TypeConverter
+    fun toLongDoubleMap(json: String?): Map<Long, Double> {
+        if (json == null) return HashMap()
+        val type = object : TypeToken<Map<Long, Double>>() {}.type
+        return gson.fromJson(json, type) ?: HashMap()
+    }
+
+    @TypeConverter
+    fun fromStringPairMap(map: Map<String, Pair<Double, Double>>?): String? {
+        return map?.let { gson.toJson(it) }
+    }
+
+    @TypeConverter
+    fun toStringPairMap(json: String?): Map<String, Pair<Double, Double>> {
+        if (json == null) return HashMap()
+        val type = object : TypeToken<Map<String, Pair<Double, Double>>>() {}.type
+        return gson.fromJson(json, type) ?: HashMap()
     }
 }
