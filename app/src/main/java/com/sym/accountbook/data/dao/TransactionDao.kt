@@ -44,4 +44,7 @@ interface TransactionDao {
 
     @Delete
     suspend fun deleteTransaction(transaction: Transaction)
+
+    @Query("DELETE FROM transactions WHERE categoryId = :categoryId")
+    suspend fun deleteTransactionsByCategoryId(categoryId: Long)
 }

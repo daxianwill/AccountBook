@@ -7,6 +7,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.sym.accountbook.data.AppDatabase
 import com.sym.accountbook.data.entity.Category
+import com.sym.accountbook.data.entity.Transaction
 import com.sym.accountbook.data.entity.TransactionType
 import com.sym.accountbook.data.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 
 class CategoryViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: CategoryRepository
+    private val transactionDao = AppDatabase.getDatabase(application).transactionDao()
     val allCategories: LiveData<List<Category>>
 
     init {
@@ -35,6 +37,9 @@ class CategoryViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun deleteCategory(category: Category) = viewModelScope.launch {
+        // 首先删除该类别下的所有交易记录
+        transactionDao.deleteTransactionsByCategoryId(category.id)
+        // 然后删除类别本身
         repository.deleteCategory(category)
     }
 }
