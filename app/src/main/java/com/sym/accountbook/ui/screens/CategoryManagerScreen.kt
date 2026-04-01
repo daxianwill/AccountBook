@@ -2,6 +2,8 @@ package com.sym.accountbook.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,8 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,6 +65,8 @@ fun CategoryManagerScreen(navController: NavController) {
 
     val categories by categoryViewModel.allCategories.observeAsState(initial = emptyList())
     var showAddDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var categoryToDelete by remember { mutableStateOf<Category?>(null) }
 
     Scaffold(
         topBar = {
@@ -97,7 +103,13 @@ fun CategoryManagerScreen(navController: NavController) {
                     )
                 }
             } else {
-                CategoryListContent(categories = categories)
+                CategoryListContent(
+                    categories = categories,
+                    onDeleteClick = {
+                        categoryToDelete = it
+                        showDeleteDialog = true
+                    }
+                )
             }
         }
     }
@@ -111,10 +123,21 @@ fun CategoryManagerScreen(navController: NavController) {
             }
         )
     }
+
+    if (showDeleteDialog && categoryToDelete != null) {
+        DeleteCategoryDialog(
+            category = categoryToDelete!!,
+            onDismiss = { showDeleteDialog = false },
+            onDelete = {
+                categoryViewModel.deleteCategory(categoryToDelete!!)
+                showDeleteDialog = false
+            }
+        )
+    }
 }
 
 @Composable
-fun CategoryListContent(categories: List<Category>) {
+fun CategoryListContent(categories: List<Category>, onDeleteClick: (Category) -> Unit) {
     val expenseCategories = categories.filter { it.type == TransactionType.EXPENSE }
     val incomeCategories = categories.filter { it.type == TransactionType.INCOME }
 
@@ -132,7 +155,7 @@ fun CategoryListContent(categories: List<Category>) {
                 )
             }
             items(expenseCategories) { cat ->
-                CategoryItem(category = cat)
+                CategoryItem(category = cat, onDeleteClick = onDeleteClick)
             }
         }
 
@@ -146,7 +169,7 @@ fun CategoryListContent(categories: List<Category>) {
                 )
             }
             items(incomeCategories) { cat ->
-                CategoryItem(category = cat)
+                CategoryItem(category = cat, onDeleteClick = onDeleteClick)
             }
         }
     }
@@ -213,12 +236,17 @@ fun CategorySectionHeader(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CategoryItem(category: Category) {
+fun CategoryItem(category: Category, onDeleteClick: (Category) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .combinedClickable(
+                onClick = { },
+                onLongClick = { onDeleteClick(category) }
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = MaterialTheme.shapes.medium
     ) {
@@ -351,6 +379,38 @@ fun AddCategoryDialog(
                 }
             ) {
                 Text("添加")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteCategoryDialog(
+    category: Category,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("删除分类") },
+        text = {
+            Text("确定要删除分类 '${category.name}' 吗？\n\n此操作将同时删除该分类下的所有交易记录。")
+        },
+        confirmButton = {
+            Button(
+                onClick = onDelete,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("删除")
             }
         },
         dismissButton = {
