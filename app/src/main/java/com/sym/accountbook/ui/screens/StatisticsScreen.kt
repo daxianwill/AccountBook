@@ -91,9 +91,19 @@ fun StatisticsScreen(navController: NavController) {
         }
     }
 
+    // 根据选中的年份筛选交易数据
+    val yearFilteredTransactions = remember(transactionsWithCategory, selectedYear) {
+        transactionsWithCategory.filter { item ->
+            val itemCalendar = Calendar.getInstance()
+            itemCalendar.time = item.transaction.date
+            itemCalendar.get(Calendar.YEAR) == selectedYear
+        }
+    }
+
     // 计算分类支出统计
     val monthTotalExpense = filteredTransactions
         .filter { it.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE }
+        .filter { it.category?.showInMonthStats ?: true }
         .sumOf { it.transaction.amount }
 
     val monthTotalIncome = filteredTransactions
@@ -107,10 +117,10 @@ fun StatisticsScreen(navController: NavController) {
     // 计算每日收支趋势数据
     val dailyExpenses = calculateDailyTrend(filteredTransactions)
 
-    // 计算月度收支数据
-    val monthlyData = calculateMonthlyData(transactionsWithCategory)
+    // 计算月度收支数据（只显示选中年份的）
+    val monthlyData = calculateMonthlyData(yearFilteredTransactions)
 
-    // 计算年度收支数据
+    // 计算年度收支数据（显示所有年份）
     val annualData = calculateAnnualData(transactionsWithCategory)
 
     Scaffold(
@@ -192,6 +202,82 @@ fun StatisticsScreen(navController: NavController) {
                 annualData = annualData,
                 modifier = Modifier.padding(top = 8.dp)
             )
+
+            // 不在月度统计中的支出（显示选中年份的）
+            val annualOnlyExpenses = yearFilteredTransactions
+                .filter { it.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE }
+                .filter { !(it.category?.showInMonthStats ?: true) }
+            
+            if (annualOnlyExpenses.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "年统计支出",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        val annualOnlyTotal = annualOnlyExpenses.sumOf { it.transaction.amount }
+                        Text(
+                            text = "总计: ¥ %.2f".format(annualOnlyTotal),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = SoftRed
+                        )
+                        
+                        annualOnlyExpenses.forEachIndexed { index, item ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .clickable {
+                                        navController.navigate(
+                                            Screen.EditTransaction.createRoute(item.transaction.id)
+                                        )
+                                    },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .background(
+                                                color = Color(item.category?.color ?: 0xFF9C27B0),
+                                                shape = CircleShape
+                                            )
+                                    )
+                                    Column {
+                                        Text(
+                                            text = item.category?.name ?: "未分类",
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                        Text(
+                                            text = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.CHINA)
+                                                .format(item.transaction.date),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "¥ %.2f".format(item.transaction.amount),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = SoftRed
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -257,6 +343,7 @@ private fun calculateCategoryExpenses(
 
     transactionsWithCategory
         .filter { it.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE }
+        .filter { it.category?.showInMonthStats ?: true }
         .forEach { item ->
             val categoryName = item.category?.name ?: "未分类"
             val categoryColor = item.category?.color ?: colors.random()
@@ -354,18 +441,39 @@ private fun calculateAnnualData(
         val existing = annualMap[year]
         if (existing != null) {
             if (item.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE) {
-                existing.expense += item.transaction.amount
+                if (item.category?.showInMonthStats ?: true) {
+                    existing.monthStatsExpense += item.transaction.amount
+                } else {
+                    existing.annualStatsExpense += item.transaction.amount
+                }
             } else {
                 existing.income += item.transaction.amount
             }
         } else {
-            annualMap[year] = YearTotal(
-                year = year,
-                expense = if (item.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE)
-                    item.transaction.amount else 0.0,
-                income = if (item.transaction.type == com.sym.accountbook.data.entity.TransactionType.INCOME)
-                    item.transaction.amount else 0.0
-            )
+            if (item.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE) {
+                if (item.category?.showInMonthStats ?: true) {
+                    annualMap[year] = YearTotal(
+                        year = year,
+                        monthStatsExpense = item.transaction.amount,
+                        annualStatsExpense = 0.0,
+                        income = 0.0
+                    )
+                } else {
+                    annualMap[year] = YearTotal(
+                        year = year,
+                        monthStatsExpense = 0.0,
+                        annualStatsExpense = item.transaction.amount,
+                        income = 0.0
+                    )
+                }
+            } else {
+                annualMap[year] = YearTotal(
+                    year = year,
+                    monthStatsExpense = 0.0,
+                    annualStatsExpense = 0.0,
+                    income = item.transaction.amount
+                )
+            }
         }
     }
 
@@ -374,7 +482,8 @@ private fun calculateAnnualData(
         .map {
             AnnualData(
                 year = it.year,
-                expense = it.expense,
+                monthStatsExpense = it.monthStatsExpense,
+                annualStatsExpense = it.annualStatsExpense,
                 income = it.income
             )
         }
@@ -382,7 +491,8 @@ private fun calculateAnnualData(
 
 private data class YearTotal(
     val year: Int,
-    var expense: Double,
+    var monthStatsExpense: Double,
+    var annualStatsExpense: Double,
     var income: Double
 )
 
