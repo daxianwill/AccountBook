@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -310,6 +311,7 @@ fun AddCategoryDialog(
 ) {
     var categoryName by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(TransactionType.EXPENSE) }
+    var showInMonthStats by remember { mutableStateOf(true) }
 
     val colors = listOf(
         0xFF2196F3, 0xFF9C27B0, 0xFFFF9800, 0xFF00BCD4,
@@ -359,6 +361,30 @@ fun AddCategoryDialog(
                         Text("收入")
                     }
                 }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "在月统计中显示",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "关闭后仅在年统计中显示",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = showInMonthStats,
+                        onCheckedChange = { showInMonthStats = it }
+                    )
+                }
             }
         },
         confirmButton = {
@@ -372,7 +398,8 @@ fun AddCategoryDialog(
                                 name = categoryName,
                                 icon = icons.random(),
                                 type = selectedType,
-                                color = randomColor
+                                color = randomColor,
+                                showInMonthStats = showInMonthStats
                             )
                         )
                     }

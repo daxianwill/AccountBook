@@ -10,5 +10,6 @@ data class Category(
     val name: String,
     val icon: String,
     val type: TransactionType,
-    val color: Long
+    val color: Long,
+    val showInMonthStats: Boolean = true
 )

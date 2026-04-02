@@ -310,7 +310,8 @@ data class MonthlyData(
 // 年度收支数据类
 data class AnnualData(
     val year: Int,
-    val expense: Double,
+    val monthStatsExpense: Double,  // 月统计支出
+    val annualStatsExpense: Double,  // 年统计支出（不在月统计中显示的）
     val income: Double
 )
 
@@ -491,20 +492,29 @@ fun AnnualBarChart(
                     },
                     update = { barChart ->
                         val sortedData = annualData.sortedBy { it.year }
-                        val barWidth = 0.35f
-                        val groupSpace = 0.2f
-                        val barSpace = 0.05f
+                        val barWidth = 0.25f
+                        val groupSpace = 0.15f
+                        val barSpace = 0.03f
 
-                        val expenseEntries = sortedData.mapIndexed { index, data ->
-                            BarEntry(index.toFloat(), data.expense.toFloat())
+                        val monthStatsExpenseEntries = sortedData.mapIndexed { index, data ->
+                            BarEntry(index.toFloat(), data.monthStatsExpense.toFloat())
+                        }
+
+                        val annualStatsExpenseEntries = sortedData.mapIndexed { index, data ->
+                            BarEntry(index.toFloat(), data.annualStatsExpense.toFloat())
                         }
 
                         val incomeEntries = sortedData.mapIndexed { index, data ->
                             BarEntry(index.toFloat(), data.income.toFloat())
                         }
 
-                        val expenseDataSet = BarDataSet(expenseEntries, "支出").apply {
+                        val monthStatsExpenseDataSet = BarDataSet(monthStatsExpenseEntries, "月统计支出").apply {
                             color = Color.parseColor("#FF6B6B")
+                            valueTextSize = 9f
+                        }
+
+                        val annualStatsExpenseDataSet = BarDataSet(annualStatsExpenseEntries, "年统计支出").apply {
+                            color = Color.parseColor("#FFA07A")
                             valueTextSize = 9f
                         }
 
@@ -513,7 +523,7 @@ fun AnnualBarChart(
                             valueTextSize = 9f
                         }
 
-                        val barData = BarData(expenseDataSet, incomeDataSet)
+                        val barData = BarData(monthStatsExpenseDataSet, annualStatsExpenseDataSet, incomeDataSet)
                         barData.barWidth = barWidth
                         barChart.data = barData
 
@@ -521,7 +531,7 @@ fun AnnualBarChart(
                             override fun getFormattedValue(value: Float): String {
                                 val index = value.toInt()
                                 return if (index in sortedData.indices) {
-                                    sortedData[index].year.toString()
+                                    "${sortedData[index].year}年"
                                 } else {
                                     ""
                                 }

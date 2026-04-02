@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "0976c3b1f8481bc411fe86ceed037f78",
+    "identityHash": "86f22cbeb781236a97c0979f2c6f4e31",
     "entities": [
       {
         "tableName": "transactions",
@@ -56,7 +56,7 @@
       },
       {
         "tableName": "categories",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `icon` TEXT NOT NULL, `type` TEXT NOT NULL, `color` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `icon` TEXT NOT NULL, `type` TEXT NOT NULL, `color` INTEGER NOT NULL, `showInMonthStats` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -85,6 +85,12 @@
           {
             "fieldPath": "color",
             "columnName": "color",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "showInMonthStats",
+            "columnName": "showInMonthStats",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -146,7 +152,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0976c3b1f8481bc411fe86ceed037f78')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '86f22cbeb781236a97c0979f2c6f4e31')"
     ]
   }
 }

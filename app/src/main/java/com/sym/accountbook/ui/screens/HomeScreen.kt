@@ -116,6 +116,7 @@ fun HomeScreen(navController: NavController) {
     LaunchedEffect(transactionsWithCategory) {
         totalExpense = transactionsWithCategory
             .filter { it.transaction.type == TransactionType.EXPENSE }
+            .filter { it.category?.showInMonthStats ?: true }
             .sumOf { it.transaction.amount }
 
         totalIncome = transactionsWithCategory
