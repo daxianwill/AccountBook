@@ -91,6 +91,15 @@ fun StatisticsScreen(navController: NavController) {
         }
     }
 
+    // 根据选中的年份筛选交易数据
+    val yearFilteredTransactions = remember(transactionsWithCategory, selectedYear) {
+        transactionsWithCategory.filter { item ->
+            val itemCalendar = Calendar.getInstance()
+            itemCalendar.time = item.transaction.date
+            itemCalendar.get(Calendar.YEAR) == selectedYear
+        }
+    }
+
     // 计算分类支出统计
     val monthTotalExpense = filteredTransactions
         .filter { it.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE }
@@ -108,10 +117,10 @@ fun StatisticsScreen(navController: NavController) {
     // 计算每日收支趋势数据
     val dailyExpenses = calculateDailyTrend(filteredTransactions)
 
-    // 计算月度收支数据
-    val monthlyData = calculateMonthlyData(transactionsWithCategory)
+    // 计算月度收支数据（只显示选中年份的）
+    val monthlyData = calculateMonthlyData(yearFilteredTransactions)
 
-    // 计算年度收支数据
+    // 计算年度收支数据（显示所有年份）
     val annualData = calculateAnnualData(transactionsWithCategory)
 
     Scaffold(
@@ -194,8 +203,8 @@ fun StatisticsScreen(navController: NavController) {
                 modifier = Modifier.padding(top = 8.dp)
             )
 
-            // 不在月度统计中的支出
-            val annualOnlyExpenses = filteredTransactions
+            // 不在月度统计中的支出（显示选中年份的）
+            val annualOnlyExpenses = yearFilteredTransactions
                 .filter { it.transaction.type == com.sym.accountbook.data.entity.TransactionType.EXPENSE }
                 .filter { !(it.category?.showInMonthStats ?: true) }
             
