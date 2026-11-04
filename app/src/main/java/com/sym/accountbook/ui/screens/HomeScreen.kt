@@ -53,14 +53,19 @@ import com.sym.accountbook.ui.theme.SoftRed
 import com.sym.accountbook.ui.theme.SoftYellow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import android.app.Application
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.sym.accountbook.data.entity.Budget
+import com.sym.accountbook.data.entity.Category
+import com.sym.accountbook.data.entity.Transaction
 import com.sym.accountbook.data.entity.TransactionType
 import com.sym.accountbook.data.entity.TransactionWithCategory
 import com.sym.accountbook.ui.navigation.Screen
+import com.sym.accountbook.ui.theme.AppTheme
 import com.sym.accountbook.ui.viewmodel.BudgetViewModel
 import com.sym.accountbook.ui.viewmodel.BudgetViewModelFactory
 import com.sym.accountbook.ui.viewmodel.TransactionViewModel
@@ -70,6 +75,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import kotlinx.coroutines.flow.collect
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,10 +106,14 @@ fun HomeScreen(navController: NavController) {
     // 计算选中月份的开始和结束日期
     val (startDate, endDate) = remember(selectedYear, selectedMonth) {
         val start = Calendar.getInstance().apply {
+            clear()
             set(selectedYear, selectedMonth, 1, 0, 0, 0)
         }.time
         val end = Calendar.getInstance().apply {
-            set(selectedYear, selectedMonth, getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59)
+            clear()
+            set(selectedYear, selectedMonth, 1, 0, 0, 0)
+            add(Calendar.MONTH, 1)
+            add(Calendar.MILLISECOND, -1)
         }.time
         Pair(start, end)
     }
@@ -662,4 +672,45 @@ fun MonthPickerDialog(
             }
         }
     )
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun SummaryCardPreview() {
+    AppTheme(dynamicColor = false) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            SummaryCard(
+                totalExpense = 1234.56,
+                totalIncome = 5000.0,
+                budget = Budget(amount = 3000.0),
+                onBudgetSettingClick = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun TransactionItemPreview() {
+    AppTheme(dynamicColor = false) {
+        TransactionItem(
+            item = TransactionWithCategory(
+                transaction = Transaction(
+                    type = TransactionType.EXPENSE,
+                    categoryId = 1,
+                    amount = 28.5,
+                    date = Date(),
+                    note = "午餐"
+                ),
+                category = Category(
+                    id = 1,
+                    name = "餐饮",
+                    icon = "🍜",
+                    type = TransactionType.EXPENSE,
+                    color = 0xFFFF8A80
+                )
+            ),
+            onClick = {}
+        )
+    }
 }

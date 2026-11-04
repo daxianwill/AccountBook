@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.sym.accountbook"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.sym.accountbook"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 3
         versionName = "1.2"
 
@@ -47,11 +47,12 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
-    packagingOptions {
+    packaging {
         resources {
             excludes.add("/META-INF/{AL2.0,LGPL2.1}")
         }
@@ -80,9 +81,9 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:1.4.3")
     
     // Room Database
-    implementation("androidx.room:room-runtime:2.5.2")
-    kapt("androidx.room:room-compiler:2.5.2")
-    implementation("androidx.room:room-ktx:2.5.2")
+    implementation("androidx.room:room-runtime:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
     
     // Icons
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
